@@ -1,9 +1,15 @@
 // get packages
 const gulp = require('gulp');
+
 const sass = require('gulp-sass');
 const cssnano = require('gulp-cssnano');
 const sourcemaps = require('gulp-sourcemaps');
 const autoprefixer = require('gulp-autoprefixer');
+
+const newer = require('gulp-newer');
+const imagemin = require('gulp-imagemin');
+const htmlclean = require('gulp-htmlclean');
+
 const browserSync = require('browser-sync').create();
 
 
@@ -18,10 +24,18 @@ const directory = {
 };
 
 
-// copy over html file from source to public
-gulp.task('html', function() {
-  gulp.src('src/*.html')
-    .pipe(gulp.dest('dist'))
+// HTML processing
+gulp.task('html', ['images'], function() {
+  const out = directory.dist
+  const page = gulp.src(directory.src + '*.html')
+    .pipe(newer(out));
+
+    // minify production html
+    if (!devBuild) {
+      page = page.pipe(htmlclean())
+    }
+
+    return page.pipe(gulp.dest(out));
 });
 
 
@@ -38,6 +52,16 @@ gulp.task('styles', function() {
     .pipe(sourcemaps.write('./'))
   .pipe(gulp.dest('./dist/css/'))
   .pipe(browserSync.stream());
+});
+
+
+// image processing
+gulp.task('images', function() {
+  const out = directory.dist + 'img/';
+  return gulp.src(directory.src + 'img/**/*')
+    .pipe(newer(out))
+    .pipe(imagemin({optimizationLevel: 5}))
+    .pipe(gulp.dest(out));
 });
 
 

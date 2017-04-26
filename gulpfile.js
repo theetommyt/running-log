@@ -1,4 +1,4 @@
-// get packages
+// get packages //
 const gulp = require('gulp');
 
 const sass = require('gulp-sass');
@@ -10,21 +10,26 @@ const newer = require('gulp-newer');
 const imagemin = require('gulp-imagemin');
 const htmlclean = require('gulp-htmlclean');
 
+const eslint = require('gulp-eslint');
+const concat = require('gulp-concat');
+const rename = require('gulp-rename');
+const uglify = require('gulp-uglify');
+
 const browserSync = require('browser-sync').create();
 
 
-// development mode
+// development mode //
 const devBuild = (process.env.NODE_ENV !== 'production')
 
 
-// set directories
+// set directories //
 const directory = {
   src: 'src/',
   dist: 'dist/'
 };
 
 
-// HTML processing
+// HTML processing //
 gulp.task('html', ['images'], function() {
   const out = directory.dist
   const page = gulp.src(directory.src + '*.html')
@@ -39,7 +44,7 @@ gulp.task('html', ['images'], function() {
 });
 
 
-// compile sass to minified css with sourcemaps & autoprefix
+// compile sass to minified css with sourcemaps & autoprefix //
 gulp.task('styles', function() {
   gulp.src('./src/scss/**/*.scss')
     .pipe(sourcemaps.init())
@@ -55,7 +60,7 @@ gulp.task('styles', function() {
 });
 
 
-// image processing
+// image processing //
 gulp.task('images', function() {
   const out = directory.dist + 'img/';
   return gulp.src(directory.src + 'img/**/*')
@@ -64,10 +69,27 @@ gulp.task('images', function() {
     .pipe(gulp.dest(out));
 });
 
+// JavaScript Tasks //
+
+// eslint //
+gulp.task('lint', function() {
+  return gulp.src(directory.src + '/scripts/**/*.js')
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
+});
+
+// JS concat, minify after lint task
+gulp.task('scripts', ['lint'], function(){
+  return gulp.src(directory.src + '/scripts/**/*.js')
+    .pipe(concat('js_bundle.js'))
+    .pipe(gulp.dest(directory.dist + '/scripts'));
+});
 
 
-// browserSync static server + watch sass & html files
-gulp.task('serve', ['styles', 'html'], function() {
+
+// browserSync static server + watch sass & html files //
+gulp.task('serve', ['styles', 'html', 'scripts'], function() {
   browserSync.init({
     server: {
       baseDir: "./dist/"
